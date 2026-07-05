@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
-import { CjsDxbcReader } from "../src/index.js";
+import { CjsFormatDxbc } from "../src/index.js";
 
 /**
  * Optional corpus sweep: scans the directory supplied by DXBC_CORPUS_DIR for
@@ -67,7 +67,7 @@ test(
                 payloads += 1;
                 try
                 {
-                    const result = CjsDxbcReader.read(blob, { emit: CjsDxbcReader.OUTPUT_RAW, source: filePath });
+                    const result = CjsFormatDxbc.read(blob, { emit: CjsFormatDxbc.OUTPUT_RAW, source: filePath });
                     if (result.decoder) instructions += result.decoder.instructions.length;
                 }
                 catch (error)

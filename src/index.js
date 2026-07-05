@@ -1,1 +1,1 @@
-export { CjsDxbcReader, default } from "./CjsDxbcReader.js";
+export { CjsFormatDxbc, default } from "./CjsFormatDxbc.js";

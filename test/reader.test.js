@@ -1,20 +1,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { CjsDxbcReader } from "../src/index.js";
+import { CjsFormatDxbc } from "../src/index.js";
 import { buildMinimalVertexDxbc } from "./synthetic.js";
 
 test("static read and instance Read share one code path", () =>
 {
     const bytes = buildMinimalVertexDxbc();
-    const fromStatic = CjsDxbcReader.read(bytes, { source: "synthetic" });
-    const fromInstance = new CjsDxbcReader({ source: "synthetic" }).Read(bytes);
+    const fromStatic = CjsFormatDxbc.read(bytes, { source: "synthetic" });
+    const fromInstance = new CjsFormatDxbc({ source: "synthetic" }).Read(bytes);
     assert.deepEqual(fromStatic, fromInstance);
 });
 
 test("json emit is plain data with decoded instructions", () =>
 {
-    const result = CjsDxbcReader.read(buildMinimalVertexDxbc(), { source: "synthetic" });
+    const result = CjsFormatDxbc.read(buildMinimalVertexDxbc(), { source: "synthetic" });
 
     assert.equal(result.program.programTypeName, "vertex");
     assert.equal(result.container.chunks[0].fourCC, "SHEX");
@@ -25,7 +25,7 @@ test("json emit is plain data with decoded instructions", () =>
 
 test("raw emit exposes the decoder objects", () =>
 {
-    const result = CjsDxbcReader.read(buildMinimalVertexDxbc(), { emit: CjsDxbcReader.OUTPUT_RAW });
+    const result = CjsFormatDxbc.read(buildMinimalVertexDxbc(), { emit: CjsFormatDxbc.OUTPUT_RAW });
 
     assert.equal(result.program.constructor.name, "DxbcShaderProgram");
     assert.equal(result.decoder.constructor.name, "DxbcInstructionDecoder");
@@ -34,7 +34,7 @@ test("raw emit exposes the decoder objects", () =>
 
 test("inspect summarizes without instruction decode", () =>
 {
-    const summary = CjsDxbcReader.inspect(buildMinimalVertexDxbc());
+    const summary = CjsFormatDxbc.inspect(buildMinimalVertexDxbc());
 
     assert.equal(summary.isDxbc, true);
     assert.equal(summary.programTypeName, "vertex");
@@ -45,16 +45,16 @@ test("inspect summarizes without instruction decode", () =>
 
 test("profiles hold values and reject invalid emits", () =>
 {
-    const reader = new CjsDxbcReader({ emit: CjsDxbcReader.OUTPUT_RAW, source: "profile" });
-    assert.equal(reader.GetValues().emit, CjsDxbcReader.OUTPUT_RAW);
+    const reader = new CjsFormatDxbc({ emit: CjsFormatDxbc.OUTPUT_RAW, source: "profile" });
+    assert.equal(reader.GetValues().emit, CjsFormatDxbc.OUTPUT_RAW);
     assert.equal(reader.GetValues({ source: "override" }).source, "override");
     assert.equal(reader.GetValues().source, "profile");
-    assert.throws(() => new CjsDxbcReader({ emit: "nonsense" }), /emit must be/);
+    assert.throws(() => new CjsFormatDxbc({ emit: "nonsense" }), /emit must be/);
 });
 
 test("toJSON converts typed arrays and nested structures", () =>
 {
-    const converted = CjsDxbcReader.toJSON({
+    const converted = CjsFormatDxbc.toJSON({
         tokens: new Uint32Array([ 1, 2 ]),
         nested: [ { mask: new Uint8Array([ 3 ]) } ]
     });

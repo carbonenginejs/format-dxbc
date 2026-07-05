@@ -1,5 +1,5 @@
 /**
- * Exposed CarbonEngineJS-facing DXBC reader class.
+ * Exposed CarbonEngineJS-facing DXBC format class.
  *
  * Keep this file small and reviewable: container/signature/program parsing
  * and the instruction decoder live in core/; input/option normalization and
@@ -17,18 +17,18 @@ import {
     toJsonValue
 } from "./core/helpers.js";
 
-const READER_NAME = "CjsDxbcReader";
+const FORMAT_NAME = "CjsFormatDxbc";
 
 /**
  * CarbonEngineJS-facing DXBC (Direct3D shader bytecode) reader.
  *
- * The Cjs prefix marks this as a JavaScript reader/construction boundary.
+ * The Cjs prefix marks this as a JavaScript format/construction boundary.
  * DXBC is Microsoft's compiled-shader container format; this reader has no
  * CCP/Carbon vocabulary. It parses the container, signatures and the
  * SM4/SM5 token stream, and emits plain JSON data by default or the raw
  * decoder objects for backends (GLSL/WGSL emitters) that want them.
  */
-export class CjsDxbcReader
+export class CjsFormatDxbc
 {
 
     #emit = DEFAULT_VALUES.emit;
@@ -36,9 +36,9 @@ export class CjsDxbcReader
     #decodeInstructions = DEFAULT_VALUES.decodeInstructions;
 
     /**
-     * Create a reusable reader profile.
+     * Create a reusable format profile.
      *
-     * @param {object} [options] Default reader values.
+     * @param {object} [options] Default format values.
      */
     constructor(options = {})
     {
@@ -46,14 +46,14 @@ export class CjsDxbcReader
     }
 
     /**
-     * Set reader values for this reusable profile.
+     * Set format values for this reusable profile.
      *
      * @param {object} [options] Values to merge into the profile.
-     * @returns {CjsDxbcReader} This reader.
+     * @returns {CjsFormatDxbc} This format profile.
      */
     SetValues(options = {})
     {
-        const values = normalizeValues(this.GetValues(), options, READER_NAME);
+        const values = normalizeValues(this.GetValues(), options, FORMAT_NAME);
 
         this.#emit = values.emit;
         this.#source = values.source;
@@ -74,7 +74,7 @@ export class CjsDxbcReader
             emit: this.#emit,
             source: this.#source,
             decodeInstructions: this.#decodeInstructions
-        }, options, READER_NAME);
+        }, options, FORMAT_NAME);
     }
 
     /**
@@ -123,30 +123,30 @@ export class CjsDxbcReader
      * Static one-shot read.
      *
      * @param {Uint8Array|ArrayBuffer|Buffer|DataView} input DXBC bytes.
-     * @param {object} [options] Reader values.
+     * @param {object} [options] Format values.
      * @returns {object} Plain JSON data, or raw decoder objects when emit is "raw".
      */
     static read(input, options = {})
     {
-        return readWithValues(input, normalizeValues(DEFAULT_VALUES, options, READER_NAME));
+        return readWithValues(input, normalizeValues(DEFAULT_VALUES, options, FORMAT_NAME));
     }
 
     /**
      * Static one-shot inspection.
      *
      * @param {Uint8Array|ArrayBuffer|Buffer|DataView} input DXBC bytes.
-     * @param {object} [options] Reader values.
+     * @param {object} [options] Format values.
      * @returns {object} Plain summary data.
      */
     static inspect(input, options = {})
     {
-        return inspectWithValues(input, normalizeValues(DEFAULT_VALUES, options, READER_NAME));
+        return inspectWithValues(input, normalizeValues(DEFAULT_VALUES, options, FORMAT_NAME));
     }
 
     /**
      * Static JSON-compatible conversion.
      *
-     * @param {any} value Reader output to convert.
+     * @param {any} value Format output to convert.
      * @returns {any} Plain JSON-compatible data.
      */
     static toJSON(value)
@@ -159,4 +159,4 @@ export class CjsDxbcReader
 
 }
 
-export default CjsDxbcReader;
+export default CjsFormatDxbc;

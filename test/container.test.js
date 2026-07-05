@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { CjsDxbcReader } from "../src/index.js";
+import { CjsFormatDxbc } from "../src/index.js";
 import { DxbcContainer } from "../src/core/container.js";
 import { buildContainer, buildMinimalVertexDxbc } from "./synthetic.js";
 
@@ -24,9 +24,9 @@ test("DxbcContainer reads a synthetic chunk directory", () =>
 
 test("magic sniffing accepts DXBC and rejects junk", () =>
 {
-    assert.equal(CjsDxbcReader.isDxbc(buildMinimalVertexDxbc()), true);
-    assert.equal(CjsDxbcReader.isDxbc(new Uint8Array([ 1, 2, 3, 4, 5 ])), false);
-    assert.equal(CjsDxbcReader.isDxbc(new Uint8Array(0)), false);
+    assert.equal(CjsFormatDxbc.isDxbc(buildMinimalVertexDxbc()), true);
+    assert.equal(CjsFormatDxbc.isDxbc(new Uint8Array([ 1, 2, 3, 4, 5 ])), false);
+    assert.equal(CjsFormatDxbc.isDxbc(new Uint8Array(0)), false);
 });
 
 test("truncated containers throw a read error", () =>

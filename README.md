@@ -1,4 +1,4 @@
-# @carbonenginejs/reader-dxbc
+# @carbonenginejs/format-dxbc
 
 Pure-JavaScript CarbonEngineJS-facing reader for Microsoft DXBC (Direct3D
 compiled shader bytecode). No native tooling, no build step; it runs in Node
@@ -13,34 +13,34 @@ DXBC is not a CCP format — this package has no Carbon/Trinity vocabulary. It
 parses the DXBC container and chunk directory, the input/output/patch
 signatures, and decodes the complete SM4/SM5 instruction token stream
 (218-opcode table, declarations included). The decoded instruction stream is
-the contract shader-translation backends build against (`@carbonenginejs/reader-webgl` for
-GLSL ES 3.00, `@carbonenginejs/reader-webgpu` later for WGSL).
+the contract shader-translation backends build against (`@carbonenginejs/format-webgl` for
+GLSL ES 3.00, `@carbonenginejs/format-webgpu` later for WGSL).
 
 ## Install
 
 ```sh
-npm install @carbonenginejs/reader-dxbc
+npm install @carbonenginejs/format-dxbc
 ```
 
 ## Public API
 
-The package root exports one public class: `CjsDxbcReader`. The `Cjs` prefix
-marks this as a CarbonEngineJS reader/construction boundary, not an engine
+The package root exports one public class: `CjsFormatDxbc`. The `Cjs` prefix
+marks this as a CarbonEngineJS format/construction boundary, not an engine
 runtime class. Internal container/signature/program/decoder machinery lives
 under `src/core`; construction utilities destined for a shared Carbon library
 live under `src/carbon`.
 
 ```js
-import CjsDxbcReader from "@carbonenginejs/reader-dxbc";
+import CjsFormatDxbc from "@carbonenginejs/format-dxbc";
 
 // One-shot statics (camelCase by convention)
-CjsDxbcReader.isDxbc(bytes);                  // magic sniff
-CjsDxbcReader.inspect(bytes);                 // header/chunks/stage summary, no instruction decode
-CjsDxbcReader.read(bytes);                    // full decode, plain JSON data
-CjsDxbcReader.read(bytes, { emit: "raw" });   // container/program/decoder objects for backends
+CjsFormatDxbc.isDxbc(bytes);                  // magic sniff
+CjsFormatDxbc.inspect(bytes);                 // header/chunks/stage summary, no instruction decode
+CjsFormatDxbc.read(bytes);                    // full decode, plain JSON data
+CjsFormatDxbc.read(bytes, { emit: "raw" });   // container/program/decoder objects for backends
 
 // Reusable profile
-const reader = new CjsDxbcReader({
+const reader = new CjsFormatDxbc({
     emit: "json",              // "json" (default) | "raw"
     source: "myshader.dxbc",   // name used in error details
     decodeInstructions: true   // false = container/signatures only
@@ -81,4 +81,4 @@ decoded, zero failures.
 ## License
 
 MIT (see
-`LICENSE` and `NOTICE`). Unlike `@carbonenginejs/reader-gr2`, this package has no EUPL-derived code.
+`LICENSE` and `NOTICE`). Unlike `@carbonenginejs/format-gr2`, this package has no EUPL-derived code.

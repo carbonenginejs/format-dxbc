@@ -1,4 +1,4 @@
-carbonenginejs/reader-dxbc
+carbonenginejs/format-dxbc
 ==========================
 
 A pure-JavaScript reader for Microsoft DXBC (Direct3D compiled shader

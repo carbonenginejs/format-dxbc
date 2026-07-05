@@ -1,7 +1,7 @@
 {
-  "name": "@carbonenginejs/reader-dxbc",
+  "name": "@carbonenginejs/format-dxbc",
   "version": "0.1.0",
-  "description": "CarbonEngineJS DXBC reader. Parses Direct3D shader bytecode containers, signatures and the SM4/SM5 token stream, and emits JSON or raw decoder objects for shader translation backends.",
+  "description": "CarbonEngineJS DXBC format package. Parses Direct3D shader bytecode containers, signatures and the SM4/SM5 token stream, and emits JSON or raw decoder objects for shader translation backends.",
   "type": "module",
   "main": "src/index.js",
   "exports": {
@@ -17,7 +17,7 @@
   },
   "keywords": [
     "carbonenginejs",
-    "reader-dxbc",
+    "format-dxbc",
     "dxbc",
     "direct3d",
     "d3d11",
@@ -40,11 +40,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/carbonenginejs/reader-dxbc.git"
+    "url": "git+https://github.com/carbonenginejs/format-dxbc.git"
   },
-  "homepage": "https://github.com/carbonenginejs/reader-dxbc#readme",
+  "homepage": "https://github.com/carbonenginejs/format-dxbc#readme",
   "bugs": {
-    "url": "https://github.com/carbonenginejs/reader-dxbc/issues"
+    "url": "https://github.com/carbonenginejs/format-dxbc/issues"
   },
   "publishConfig": {
     "access": "public"

@@ -1,5 +1,5 @@
 /**
- * Internal read-pipeline glue for CjsDxbcReader.
+ * Internal read-pipeline glue for CjsFormatDxbc.
  *
  * Keeps the public class file small: input normalization, option
  * normalization, the shared read path used by both the instance and the
@@ -28,14 +28,14 @@ const OUTPUT_SIGNATURE_TAGS = [ "OSGN", "OSG1", "OSG5" ];
 const PATCH_SIGNATURE_TAGS = [ "PCSG", "PSG1" ];
 
 /**
- * Merge reader values over a base set and validate them.
+ * Merge format values over a base set and validate them.
  *
  * @param {object} base Current values.
  * @param {object} [options] Values to merge in.
  * @param {string} [readerName] Reader name used in error messages.
  * @returns {object} A validated copy of the merged values.
  */
-export function normalizeValues(base, options = {}, readerName = "CjsDxbcReader")
+export function normalizeValues(base, options = {}, readerName = "CjsFormatDxbc")
 {
     const values = { ...base, ...options };
 
@@ -67,7 +67,7 @@ export function toBytes(input)
     if (input instanceof Uint8Array) return input;
     if (typeof ArrayBuffer !== "undefined" && input instanceof ArrayBuffer) return new Uint8Array(input);
     if (ArrayBuffer.isView(input)) return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
-    throw new TypeError("CjsDxbcReader: input must be DXBC bytes (Uint8Array, Buffer, DataView or ArrayBuffer)");
+    throw new TypeError("CjsFormatDxbc: input must be DXBC bytes (Uint8Array, Buffer, DataView or ArrayBuffer)");
 }
 
 /**
@@ -92,7 +92,7 @@ function readSignature(container, tags, source)
  * The shared read path used by the instance Read and the static read.
  *
  * @param {Uint8Array|ArrayBuffer|Buffer|DataView} input DXBC payload.
- * @param {object} values Normalized reader values.
+ * @param {object} values Normalized format values.
  * @returns {object} Raw read result (class instances).
  */
 export function readRaw(input, values)
@@ -156,7 +156,7 @@ export function rawToJson(raw)
  * Shared read entry honouring the emit mode.
  *
  * @param {Uint8Array|ArrayBuffer|Buffer|DataView} input DXBC payload.
- * @param {object} values Normalized reader values.
+ * @param {object} values Normalized format values.
  * @returns {object} Raw result or plain JSON data per values.emit.
  */
 export function readWithValues(input, values)
@@ -169,7 +169,7 @@ export function readWithValues(input, values)
  * Cheap inspection: container/program facts without instruction decode.
  *
  * @param {Uint8Array|ArrayBuffer|Buffer|DataView} input DXBC payload.
- * @param {object} values Normalized reader values.
+ * @param {object} values Normalized format values.
  * @returns {object} Plain summary data.
  */
 export function inspectWithValues(input, values)
