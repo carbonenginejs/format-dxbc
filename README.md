@@ -11,6 +11,12 @@ signatures, and decodes the complete SM4/SM5 instruction token stream
 the contract shader-translation backends build against (`@carbonenginejs/reader-webgl` for
 GLSL ES 3.00, `@carbonenginejs/reader-webgpu` later for WGSL).
 
+## Install
+
+```sh
+npm install @carbonenginejs/reader-dxbc
+```
+
 ## Public API
 
 The package root exports one public class: `CjsDxbcReader`. The `Cjs` prefix
