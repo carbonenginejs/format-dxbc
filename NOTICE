@@ -1,0 +1,15 @@
+carbonenginejs/reader-dxbc
+==========================
+
+A pure-JavaScript reader for Microsoft DXBC (Direct3D compiled shader
+bytecode) containers and the SM4/SM5 instruction token stream.
+
+Contains no Microsoft code. The token-stream layout follows Microsoft's
+public d3d11TokenizedProgramFormat documentation. Unity Technologies'
+HLSLcc (MIT) was used as a behavioral reference while auditing instruction
+semantics; no HLSLcc source is included in this repository.
+
+CarbonEngineJS-facing code is copyright cppctamber / CarbonEngineJS
+contributors.
+
+Repository license: MIT. See LICENSE.

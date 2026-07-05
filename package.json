@@ -1,0 +1,34 @@
+{
+  "name": "reader-dxbc",
+  "version": "0.1.0",
+  "description": "CarbonEngineJS DXBC reader. Parses Direct3D shader bytecode containers, signatures and the SM4/SM5 token stream, and emits JSON or raw decoder objects for shader translation backends.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint --ext .js,.mjs src test",
+    "lint:fix": "eslint --fix --ext .js,.mjs src test"
+  },
+  "keywords": [
+    "carbonenginejs",
+    "reader-dxbc",
+    "dxbc",
+    "direct3d",
+    "d3d11",
+    "shader",
+    "bytecode",
+    "sm4",
+    "sm5",
+    "hlsl"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.57.0"
+  }
+}

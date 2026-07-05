@@ -1,0 +1,7 @@
+* text=auto eol=lf
+
+*.dxbc binary
+*.sm_hi binary
+*.sm_lo binary
+*.sm_depth binary
+*.png binary
