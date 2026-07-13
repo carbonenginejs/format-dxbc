@@ -156,6 +156,11 @@ export class CjsFormatDxbc
 
     static OUTPUT_JSON = OUTPUT_JSON;
     static OUTPUT_RAW = OUTPUT_RAW;
+    static type = Object.freeze([ "shader" ]);
+    static mediaTypes = Object.freeze([ "shader" ]);
+    static inputTypes = Object.freeze([ "dxbc" ]);
+    static outputTypes = Object.freeze([ OUTPUT_JSON ]);
+    static debugOutputTypes = Object.freeze([ OUTPUT_RAW ]);
 
 }
 

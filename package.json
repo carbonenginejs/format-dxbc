@@ -1,6 +1,6 @@
 {
   "name": "@carbonenginejs/format-dxbc",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "CarbonEngineJS DXBC format package. Parses Direct3D shader bytecode containers, signatures and the SM4/SM5 token stream, and emits JSON or raw decoder objects for shader translation backends.",
   "type": "module",
   "main": "src/index.js",

@@ -69,6 +69,9 @@ const CUSTOM_DATA_CLASS_NAMES = [
     "shader_message"
 ];
 
+const SM51_RESOURCE_OPERAND_TYPES = new Set([ 6, 7, 8, 30 ]);
+const SM51_UNBOUNDED_REGISTER = 0xffffffff;
+
 function signExtend4(value) 
 {
     return (value & 0x8) ? value - 0x10 : value;
@@ -132,6 +135,75 @@ function decodeReturnTypeToken(token)
         returnTypes,
         returnTypeNames: returnTypes.map((value) => DxbcResourceReturnTypeNames[value] || `return_type_${value}`)
     };
+}
+
+function decodeSm51BindingRange(operand, registerSpace, fail)
+{
+    if (operand.indices.length !== 3)
+    {
+        throw fail("SM5.1 resource declaration must use a 3D binding-range operand", {
+            indexDimension: operand.indices.length
+        });
+    }
+
+    const values = operand.indices.map((index) =>
+    {
+        if (index.representation !== 0 || index.values.length !== 1 || index.relative)
+        {
+            throw fail("SM5.1 binding-range indices must be immediate32 values", {
+                dimension: index.dimension,
+                representation: index.representation
+            });
+        }
+        return index.values[0];
+    });
+    const [ rangeId, lowerBound, upperBound ] = values;
+    const unbounded = upperBound === SM51_UNBOUNDED_REGISTER;
+    if (!unbounded && upperBound < lowerBound)
+    {
+        throw fail("SM5.1 binding range has an upper bound below its lower bound", {
+            rangeId,
+            lowerBound,
+            upperBound
+        });
+    }
+
+    return {
+        bindingModel: "sm5.1-range",
+        rangeId,
+        lowerBound,
+        upperBound,
+        unbounded,
+        registerCount: unbounded ? null : upperBound - lowerBound + 1,
+        registerSpace
+    };
+}
+
+function decodeSm51ResourceReference(operand)
+{
+    if (!SM51_RESOURCE_OPERAND_TYPES.has(operand.type) || operand.indices.length === 0)
+    {
+        return null;
+    }
+
+    const reference = {
+        bindingModel: "sm5.1-range",
+        rangeId: operand.indices[0]?.values[0] ?? null,
+        nonUniform: operand.nonUniform,
+        absoluteIndex: null,
+        bufferIndex: null,
+        vectorOffset: null
+    };
+    if (operand.type === 8)
+    {
+        reference.bufferIndex = operand.indices[1] || null;
+        reference.vectorOffset = operand.indices[2] || null;
+    }
+    else
+    {
+        reference.absoluteIndex = operand.indices[1] || null;
+    }
+    return reference;
 }
 
 /**
@@ -287,6 +359,14 @@ export class DxbcInstructionDecoder
         else 
         {
             instruction.operands = this._decodeOperandRun(cursor, end, instruction);
+            if (this.majorVersion === 5 && this.minorVersion >= 1)
+            {
+                for (const operand of instruction.operands)
+                {
+                    const resourceReference = decodeSm51ResourceReference(operand);
+                    if (resourceReference) operand.resourceReference = resourceReference;
+                }
+            }
         }
         return instruction;
     }
@@ -403,6 +483,20 @@ export class DxbcInstructionDecoder
             cursor += 1;
             return value;
         };
+        const failSm51 = (message, details = {}) => new DxbcReadError(message, {
+            source: this.source,
+            offset: instruction.offset,
+            opcodeName: name,
+            ...details
+        });
+        const applyBindingRange = (operand, registerSpace) =>
+        {
+            const bindingRange = decodeSm51BindingRange(operand, registerSpace, failSm51);
+            declaration.bindingModel = bindingRange.bindingModel;
+            declaration.bindingRange = bindingRange;
+            declaration.registerIndex = bindingRange.lowerBound;
+        };
+        const isSm51 = this.majorVersion === 5 && this.minorVersion >= 1;
 
         switch (name) 
         {
@@ -423,15 +517,25 @@ export class DxbcInstructionDecoder
             case "dcl_constant_buffer": {
                 declaration.accessPattern = ((token0 >>> 11) & 1) === 0 ? "immediate_indexed" : "dynamic_indexed";
                 const operand = takeOperand();
-                declaration.registerIndex = operand.indices[0]?.values[0] ?? null;
-                declaration.sizeInVec4 = operand.indices[1]?.values[0] ?? null;
+                if (isSm51)
+                {
+                    declaration.sizeInVec4 = takeToken();
+                    applyBindingRange(operand, takeToken());
+                }
+                else
+                {
+                    declaration.registerIndex = operand.indices[0]?.values[0] ?? null;
+                    declaration.sizeInVec4 = operand.indices[1]?.values[0] ?? null;
+                }
                 break;
             }
             case "dcl_sampler": {
                 const samplerMode = (token0 >>> 11) & 0x3;
                 declaration.samplerMode = samplerMode;
                 declaration.samplerModeName = SAMPLER_MODE_NAMES[samplerMode] || `sampler_mode_${samplerMode}`;
-                declaration.registerIndex = takeOperand().registerIndex;
+                const operand = takeOperand();
+                if (isSm51) applyBindingRange(operand, takeToken());
+                else declaration.registerIndex = operand.registerIndex;
                 break;
             }
             case "dcl_resource": {
@@ -439,20 +543,27 @@ export class DxbcInstructionDecoder
                 declaration.resourceDimension = dimension;
                 declaration.resourceDimensionName = DxbcResourceDimensionNames[dimension] || `dimension_${dimension}`;
                 declaration.sampleCount = (token0 >>> 16) & 0x7f;
-                declaration.registerIndex = takeOperand().registerIndex;
+                const operand = takeOperand();
                 declaration.returnType = decodeReturnTypeToken(takeToken());
+                if (isSm51) applyBindingRange(operand, takeToken());
+                else declaration.registerIndex = operand.registerIndex;
                 break;
             }
-            case "dcl_resource_raw":
-                declaration.registerIndex = takeOperand().registerIndex;
+            case "dcl_resource_raw": {
+                const operand = takeOperand();
+                if (isSm51) applyBindingRange(operand, takeToken());
+                else declaration.registerIndex = operand.registerIndex;
                 break;
+            }
             case "dcl_resource_structured": {
-                declaration.registerIndex = takeOperand().registerIndex;
+                const operand = takeOperand();
                 // Corpus reality: the byte stride is a trailing dword after the operand
                 // (48 for BoneTransforms float4x3 rows, 4 for uint index lists). The
                 // extended-opcode RESOURCE_DIM stride is a fork-added fallback only.
                 const extensionStride = instruction.extensions.find((ext) => ext.typeName === "resource_dimension");
                 declaration.structureStride = cursor < end ? takeToken() : (extensionStride?.structureStride ?? null);
+                if (isSm51) applyBindingRange(operand, takeToken());
+                else declaration.registerIndex = operand.registerIndex;
                 break;
             }
             case "dcl_input": {
@@ -483,8 +594,25 @@ export class DxbcInstructionDecoder
                 declaration.resourceDimension = dimension;
                 declaration.resourceDimensionName = DxbcResourceDimensionNames[dimension] || `dimension_${dimension}`;
                 declaration.globallyCoherent = (token0 & 0x00010000) !== 0;
-                declaration.registerIndex = takeOperand().registerIndex;
+                const operand = takeOperand();
                 declaration.returnType = decodeReturnTypeToken(takeToken());
+                if (isSm51) applyBindingRange(operand, takeToken());
+                else declaration.registerIndex = operand.registerIndex;
+                break;
+            }
+            case "dcl_unordered_access_view_raw": {
+                const operand = takeOperand();
+                declaration.globallyCoherent = (token0 & 0x00010000) !== 0;
+                if (isSm51) applyBindingRange(operand, takeToken());
+                else declaration.registerIndex = operand.registerIndex;
+                break;
+            }
+            case "dcl_unordered_access_view_structured": {
+                const operand = takeOperand();
+                declaration.globallyCoherent = (token0 & 0x00010000) !== 0;
+                declaration.structureStride = takeToken();
+                if (isSm51) applyBindingRange(operand, takeToken());
+                else declaration.registerIndex = operand.registerIndex;
                 break;
             }
             case "dcl_input_ps": {

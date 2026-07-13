@@ -53,12 +53,21 @@ header (stage, shader model), signature elements and the decoded instruction
 records. `emit: "raw"` returns the live `DxbcContainer` / `DxbcShaderProgram`
 / `DxbcInstructionDecoder` objects.
 
-## Docs
+## Semantics Contract
 
-`docs/` carries the audited DX11 instruction-semantics specifications
-(float ALU, integer/conversion, comparisons and control flow) that lowering
-backends implement against. Target-language-specific lowering notes live with
-their backend packages.
+This package carries the audited DX11 instruction-semantics contract for float
+ALU, integer/conversion, comparisons, control flow, declarations, and program
+metadata. Lowering backends consume the decoded instruction stream from this
+package and keep target-language policy in their own packages.
+
+Shader Model 5.1 resource declarations additionally expose
+`declaration.bindingRange` with the range id, lower/upper register bounds,
+unbounded state, register count, and register space. SM5.1 executable resource,
+sampler, UAV, and constant-buffer operands expose `operand.resourceReference`
+with their range id, index records, and non-uniform flag. These records keep
+range identity separate from the actual register index needed by WebGPU and
+other explicit-binding backends. Shader Model 5.0 output retains its existing
+shape.
 
 ## Tests
 
