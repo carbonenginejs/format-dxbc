@@ -1,20 +1,12 @@
 # @carbonenginejs/format-dxbc
 
-Pure-JavaScript CarbonEngineJS-facing reader for Microsoft DXBC (Direct3D
-compiled shader bytecode). No native tooling, no build step; it runs in Node
-and the browser.
+Reads Microsoft DXBC containers, signatures, and SM4/SM5 instruction streams
+as plain JavaScript data or internal decoder objects.
 
-CarbonEngine and Fenris Creations (CCP Games) are named in this package for
-interoperability and target-ecosystem context only. DXBC itself is a Microsoft
-format, and this package contains no CarbonEngine or Fenris Creations
-(CCP Games) source code.
-
-DXBC is not a CCP format — this package has no Carbon/Trinity vocabulary. It
-parses the DXBC container and chunk directory, the input/output/patch
-signatures, and decodes the complete SM4/SM5 instruction token stream
-(218-opcode table, declarations included). The decoded instruction stream is
-the contract shader-translation backends build against (`@carbonenginejs/format-webgl` for
-GLSL ES 3.00, `@carbonenginejs/format-webgpu` later for WGSL).
+Use this package when a browser or Node application needs a pure-JavaScript
+DXBC decoder. Shader lowering remains in `@carbonenginejs/format-webgl` and
+`@carbonenginejs/format-webgpu`; compiled effect-container parsing remains in
+`@carbonenginejs/format-hlsl`.
 
 ## Install
 
@@ -22,72 +14,35 @@ GLSL ES 3.00, `@carbonenginejs/format-webgpu` later for WGSL).
 npm install @carbonenginejs/format-dxbc
 ```
 
-## Public API
+## Quick start
 
-The package root exports one public class: `CjsFormatDxbc`. The `Cjs` prefix
-marks this as a CarbonEngineJS format/construction boundary, not an engine
-runtime class. Internal container/signature/program/decoder machinery lives
-under `src/core`; construction utilities destined for a shared Carbon library
-live under `src/carbon`.
+Inspect or fully decode caller-supplied DXBC bytes:
 
 ```js
-import CjsFormatDxbc from "@carbonenginejs/format-dxbc";
+import { CjsFormatDxbc } from "@carbonenginejs/format-dxbc";
 
-// One-shot statics (camelCase by convention)
-CjsFormatDxbc.isDxbc(bytes);                  // magic sniff
-CjsFormatDxbc.inspect(bytes);                 // header/chunks/stage summary, no instruction decode
-CjsFormatDxbc.read(bytes);                    // full decode, plain JSON data
-CjsFormatDxbc.read(bytes, { emit: "raw" });   // container/program/decoder objects for backends
+const summary = CjsFormatDxbc.inspect(shaderBytes);
+const decoded = CjsFormatDxbc.read(shaderBytes);
 
-// Reusable profile
-const reader = new CjsFormatDxbc({
-    emit: "json",              // "json" (default) | "raw"
-    source: "myshader.dxbc",   // name used in error details
-    decodeInstructions: true   // false = container/signatures only
-});
-const result = reader.Read(bytes);
+console.log(summary.shaderModel, decoded.instructions.length);
 ```
 
-`emit: "json"` returns plain JSON-compatible data: container facts, program
-header (stage, shader model), signature elements and the decoded instruction
-records. `emit: "raw"` returns the live `DxbcContainer` / `DxbcShaderProgram`
-/ `DxbcInstructionDecoder` objects.
+The default `json` output contains plain data suitable for serialization.
+Advanced backends may request `emit: "raw"` for the package's internal
+container, signature, program, and instruction-decoder instances.
 
-## Semantics Contract
+## Documentation
 
-This package carries the audited DX11 instruction-semantics contract for float
-ALU, integer/conversion, comparisons, control flow, declarations, and program
-metadata. Lowering backends consume the decoded instruction stream from this
-package and keep target-language policy in their own packages.
-
-Shader Model 5.1 resource declarations additionally expose
-`declaration.bindingRange` with the range id, lower/upper register bounds,
-unbounded state, register count, and register space. SM5.1 executable resource,
-sampler, UAV, and constant-buffer operands expose `operand.resourceReference`
-with their range id, index records, and non-uniform flag. These records keep
-range identity separate from the actual register index needed by WebGPU and
-other explicit-binding backends. Shader Model 5.0 output retains its existing
-shape.
-
-## Tests
-
-```sh
-npm test
-```
-
-Baseline tests are fully self-contained (synthetic DXBC assembled in-test) —
-no game assets, network access or fixtures required. An optional corpus sweep
-decodes every DXBC payload found under the directory supplied by
-`DXBC_CORPUS_DIR`:
-
-```sh
-DXBC_CORPUS_DIR=path/to/effects npm test
-```
-
-Last full sweep: 1,611 files, 12,125 DXBC payloads, 2,142,826 instructions
-decoded, zero failures.
+- [Package documentation](docs/README.md)
+- [Architecture and boundaries](docs/architecture.md)
+- [Public API reference](docs/reference/api.md)
+- [Decoded output contract](docs/reference/decoded-output.md)
+- [Class-purpose catalog](docs/reference/classes/README.md)
 
 ## License
 
-MIT (see
-`LICENSE` and `NOTICE`). Unlike `@carbonenginejs/format-gr2`, this package has no EUPL-derived code.
+MIT. See [LICENSE](LICENSE) and [NOTICE](NOTICE). DXBC is a Microsoft format;
+CarbonEngine and Fenris Creations (CCP Games) are named only for
+interoperability and target-ecosystem context. This package contains no
+Microsoft, CarbonEngine, or Fenris Creations source code and is not affiliated
+with or endorsed by CCP Games.

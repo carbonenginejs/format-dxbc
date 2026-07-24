@@ -4,7 +4,7 @@ import { cjsNormalizeBytes } from "./CjsBinaryUtils.js";
 const textDecoder = new TextDecoder("utf-8", { fatal: false });
 
 /**
- * Little-endian binary reader for Carbon/Trinity compiled effect data.
+ * Little-endian binary reader with optional shared string-table references.
  */
 export class CjsBinaryReader 
 {
